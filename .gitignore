@@ -104,3 +104,17 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+
+# Ignore root-level frontend files after moving to /app
+/index.html
+/src/
+/vite.config.*
+/tsconfig.json
+/tsconfig.node.json
+/package.json
+/pnpm-lock.yaml
+/public/
+
+# Vite build output inside /app
+/app/dist/
+/app/node_modules/

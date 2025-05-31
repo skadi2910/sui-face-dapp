@@ -2,7 +2,7 @@ import { ConnectButton } from "@mysten/dapp-kit";
 import { Box, Container, Flex, Heading } from "@radix-ui/themes";
 import { useState } from "react";
 import { WalletStatus } from "./WalletStatus";
-import { FaceDetection } from "./faceDetection";
+import { FaceDetection } from "./FaceDetection";
 import { useSuiNFTMinting } from "./hooks/useSuiNFTMinting";
 
 function App() {

@@ -24,11 +24,11 @@ export const useFaceDetection = () => {
   const eyeClosedFrames = useRef(0);
   const intervalRef = useRef<number | null>(null);
   const movementFrameCounter = useRef(0);
-  const recentPositions = useRef<{ x: number; y: number }[]>([]); // Add new ref for tracking recent positions
+  const recentPositions = useRef<{ x: number; y: number }[]>([]);
 
-  // Constants
-  const videoHeight = 400;
-  const videoWidth = 300;
+  // Constants - Match the actual display size (w-72 h-80 = 288x320px)
+  const videoHeight = 320;
+  const videoWidth = 288;
   const movementThreshold = 10;
   const blinkThreshold = 1;
   const earThreshold = 0.28;
@@ -74,7 +74,7 @@ export const useFaceDetection = () => {
     previousPosition.current = null;
     eyeClosedFrames.current = 0;
     movementFrameCounter.current = 0;
-    recentPositions.current = []; // Reset recent positions
+    recentPositions.current = [];
 
     setCaptureVideo(true);
     navigator.mediaDevices
@@ -103,21 +103,32 @@ export const useFaceDetection = () => {
         console.log("🎯 Verification complete - stopping detection processing");
         return;
       }
+      
       if (canvasRef && canvasRef.current && videoRef.current) {
         // Check if video is ready
         if (videoRef.current.readyState !== 4) {
           return;
         }
 
-        const canvas = faceapi.createCanvasFromMedia(videoRef.current);
-        canvasRef.current.getContext("2d")?.drawImage(canvas, 0, 0);
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        
+        // Make sure canvas matches the display size
+        canvas.width = videoWidth;
+        canvas.height = videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          // Clear canvas
+          ctx.clearRect(0, 0, videoWidth, videoHeight);
+        }
 
         const displaySize = { width: videoWidth, height: videoHeight };
-        faceapi.matchDimensions(canvasRef.current, displaySize);
+        faceapi.matchDimensions(canvas, displaySize);
 
         const detections = await faceapi
           .detectAllFaces(
-            videoRef.current,
+            video,
             new faceapi.TinyFaceDetectorOptions(),
           )
           .withFaceLandmarks()
@@ -241,8 +252,35 @@ export const useFaceDetection = () => {
               eyeClosedFrames.current = 0;
             }
           }
+
+          // Draw detections with proper scaling and flipping
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          
+          if (ctx) {
+            // Clear canvas
+            ctx.clearRect(0, 0, videoWidth, videoHeight);
+            
+            // Save context state
+            ctx.save();
+            
+            // Apply flip transformation to match video
+            ctx.scale(-1, 1);
+            ctx.translate(-videoWidth, 0);
+            
+            // Draw the detections on the flipped context
+            faceapi.draw.drawDetections(canvas, resizedDetections);
+            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+            faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+            
+            // Restore context state
+            ctx.restore();
+          }
         } else {
-          // Face lost - reset everything
+          // Face lost - clear canvas and reset everything
+          if (ctx) {
+            ctx.clearRect(0, 0, videoWidth, videoHeight);
+          }
+          
           if (currentStep !== "face") {
             console.log("❌ Face lost - restarting from step 1");
             setFaceDetected(false);
@@ -253,26 +291,8 @@ export const useFaceDetection = () => {
             previousPosition.current = null;
             eyeClosedFrames.current = 0;
             movementFrameCounter.current = 0;
-            recentPositions.current = []; // Reset recent positions
+            recentPositions.current = [];
           }
-        }
-
-        // Draw detections
-        const resizedDetections = faceapi.resizeResults(
-          detections,
-          displaySize,
-        );
-        canvasRef.current
-          ?.getContext("2d")
-          ?.clearRect(0, 0, videoWidth, videoHeight);
-
-        if (resizedDetections.length > 0) {
-          faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
-          faceapi.draw.drawFaceLandmarks(canvasRef.current, resizedDetections);
-          faceapi.draw.drawFaceExpressions(
-            canvasRef.current,
-            resizedDetections,
-          );
         }
       }
     }, 100);
@@ -302,7 +322,7 @@ export const useFaceDetection = () => {
     previousPosition.current = null;
     eyeClosedFrames.current = 0;
     movementFrameCounter.current = 0;
-    recentPositions.current = []; // Reset recent positions
+    recentPositions.current = [];
 
     setCaptureVideo(false);
   };
