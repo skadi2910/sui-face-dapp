@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
-import { Transaction } from "@mysten/sui/transactions";
+import { useCurrentAccount} from "@mysten/dapp-kit";
+// import { Transaction } from "@mysten/sui/transactions";
 
 export const useSuiNFTMinting = () => {
   const currentAccount = useCurrentAccount();
