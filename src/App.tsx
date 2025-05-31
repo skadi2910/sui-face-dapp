@@ -20,7 +20,7 @@
 
           <Box>
             <ConnectButton />
-          </Box>x
+          </Box>
         </Flex>
         <Container>
           <Container
