@@ -4,7 +4,7 @@ import { Transaction } from "@mysten/sui/transactions";
 
 export const useSuiNFTMinting = () => {
   const currentAccount = useCurrentAccount();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+//   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   
   const [isMinting, setIsMinting] = useState(false);
   const [mintStatus, setMintStatus] = useState<"idle" | "success" | "error">("idle");
@@ -23,7 +23,7 @@ export const useSuiNFTMinting = () => {
       console.log("🎨 Starting NFT mint on Sui...");
       
       // Create transaction for NFT minting
-      const tx = new Transaction();
+    //   const tx = new Transaction();
       
       // TODO: Add your Sui Move contract calls here
       // Example:
