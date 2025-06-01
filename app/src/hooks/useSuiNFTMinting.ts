@@ -59,7 +59,7 @@ export const useSuiNFTMinting = () => {
             // setMintedNFTId("0x8d5f2d20881446d5d6101fcf59b7b7ae7e28b555753019f3deb9cb09bdd67dfd");
           },
           onError: (error) => {
-            // console.error("❌ Transaction failed:", error);
+            console.error("❌ Transaction failed:", error);  
             setMintStatus("error");
           },
         }
