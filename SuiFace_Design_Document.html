@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuiFace - Design Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .document {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            border-radius: 2px;
+        }
+
+        .section h3 {
+            color: #34495e;
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #4facfe;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h4 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            background: #e8f4f8;
+            margin: 10px 0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: '✨';
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .tech-category {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .tech-category h4 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .tech-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tech-list li {
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .flow-diagram {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .flow-step {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: #4facfe;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-step .step-number {
+            background: #4facfe;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            font-weight: bold;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .layer {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            position: relative;
+        }
+
+        .layer h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .layer-frontend {
+            border-color: #4facfe;
+            background: linear-gradient(135deg, #4facfe10, #00f2fe10);
+        }
+
+        .layer-blockchain {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b10, #ffa726a0);
+        }
+
+        .layer-storage {
+            border-color: #4ecdc4;
+            background: linear-gradient(135deg, #4ecdc410, #44a08d10);
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .roadmap {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .roadmap-item {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #4facfe;
+            position: relative;
+        }
+
+        .roadmap-item .phase {
+            background: #4facfe;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            position: absolute;
+            top: -10px;
+            left: 20px;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .flow-steps {
+                flex-direction: column;
+            }
+            
+            .flow-step::after {
+                display: none;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="document">
+            <!-- Header Section -->
+            <div class="header">
+                <h1>🎭 SuiFace</h1>
+                <div class="subtitle">Decentralized Face Verification & Proof-of-Humanity Platform on Sui</div>
+                
+                <div class="badges">
+                    <span class="badge">React 18.3</span>
+                    <span class="badge">Sui 1.30.1</span>
+                    <span class="badge">TypeScript 5.8</span>
+                    <span class="badge">Vite 6.2</span>
+                    <span class="badge">Move 2024.beta</span>
+                    <span class="badge">Walrus testnet</span>
+                    <span class="badge">TailwindCSS 4.1</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Executive Summary -->
+                <div class="section">
+                    <h2>📋 Executive Summary</h2>
+                    <p style="font-size: 1.1em; line-height: 1.8; color: #555;">
+                        SuiFace is a cutting-edge decentralized face verification platform built on the Sui blockchain. 
+                        It enables users to prove their humanity through advanced face detection technology and mint unique, 
+                        soulbound NFT passports that serve as verifiable proof-of-humanity credentials. This innovative 
+                        solution addresses the growing need for digital identity verification in the Web3 ecosystem.
+                    </p>
+                </div>
+
+                <!-- Key Features -->
+                <div class="section">
+                    <h2>🌟 Key Features</h2>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>🤖 AI-Powered Face Detection</h4>
+                            <p>Advanced face verification using face-api.js technology for accurate human detection and validation.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🎫 Soulbound NFT Passports</h4>
+                            <p>Unique, non-transferable NFTs that serve as permanent proof of humanity credentials.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🌐 Decentralized Storage</h4>
+                            <p>Images securely stored on Walrus decentralized storage network for censorship resistance.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🔒 One-Per-Wallet Policy</h4>
+                            <p>Smart contract enforces single NFT per wallet address to prevent duplicate identities.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🎲 Random UUID Generation</h4>
+                            <p>Each passport gets a unique 6-character alphanumeric identifier for distinction.</p>
+                        </div>
+                        <div class="card">
+                            <h4>💫 Modern UI/UX</h4>
+                            <p>Beautiful, responsive interface with celebration animations and intuitive user experience.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How It Works -->
+                <div class="section">
+                    <h2>⚙️ How It Works</h2>
+                    <div class="flow-diagram">
+                        <div class="flow-steps">
+                            <div class="flow-step">
+                                <div class="step-number">1</div>
+                                <h4>Connect Wallet</h4>
+                                <p>Users connect their Sui wallet to the application</p>
+                            </div>
+                            <div class="flow-step">
+                                <div class="step-number">2</div>
+                                <h4>Face Verification</h4>
+                                <p>Advanced AI analyzes the user's face through their camera</p>
+                            </div>
+                            <div class="flow-step">
+                                <div class="step-number">3</div>
+                                <h4>Verification Success</h4>
+                                <p>Once a human face is detected and verified</p>
+                            </div>
+                            <div class="flow-step">
+                                <div class="step-number">4</div>
+                                <h4>NFT Minting</h4>
+                                <p>Users can mint their unique Sui Face Passport NFT</p>
+                            </div>
+                            <div class="flow-step">
+                                <div class="step-number">5</div>
+                                <h4>Proof of Humanity</h4>
+                                <p>The soulbound NFT serves as verifiable proof of humanity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Architecture -->
+                <div class="section">
+                    <h2>🏗 Technical Architecture</h2>
+                    <div class="architecture-diagram">
+                        <h3>System Architecture Overview</h3>
+                        
+                        <div class="layer layer-frontend">
+                            <h4>🎨 Frontend Layer</h4>
+                            <p>React 18.3 + TypeScript + Vite + TailwindCSS + Radix UI</p>
+                            <p>Face detection powered by face-api.js</p>
+                        </div>
+                        
+                        <div class="layer layer-blockchain">
+                            <h4>⛓️ Blockchain Layer</h4>
+                            <p>Sui Network + Move Smart Contracts + @mysten/sui SDK</p>
+                            <p>Soulbound NFT minting and registry management</p>
+                        </div>
+                        
+                        <div class="layer layer-storage">
+                            <h4>💾 Storage Layer</h4>
+                            <p>Walrus Decentralized Storage Network</p>
+                            <p>IPFS-like storage for NFT images and metadata</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technology Stack -->
+                <div class="section">
+                    <h2>💻 Technology Stack</h2>
+                    <div class="tech-stack">
+                        <div class="tech-category">
+                            <h4>Frontend</h4>
+                            <ul class="tech-list">
+                                <li>React 18.3</li>
+                                <li>TypeScript 5.8</li>
+                                <li>Vite 6.2</li>
+                                <li>TailwindCSS 4.1</li>
+                                <li>Radix UI</li>
+                                <li>face-api.js</li>
+                                <li>@tanstack/react-query</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="tech-category">
+                            <h4>Blockchain</h4>
+                            <ul class="tech-list">
+                                <li>Sui Network</li>
+                                <li>Move Smart Contracts</li>
+                                <li>@mysten/sui SDK</li>
+                                <li>@mysten/dapp-kit</li>
+                                <li>Sui dApp Kit</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="tech-category">
+                            <h4>Storage & Infrastructure</h4>
+                            <ul class="tech-list">
+                                <li>Walrus Decentralized Storage</li>
+                                <li>Vercel (Frontend hosting)</li>
+                                <li>Sui Testnet/Mainnet</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="tech-category">
+                            <h4>Development Tools</h4>
+                            <ul class="tech-list">
+                                <li>ESLint</li>
+                                <li>Prettier</li>
+                                <li>TypeScript</li>
+                                <li>Vite</li>
+                                <li>pnpm</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Contract Features -->
+                <div class="section">
+                    <h2>🔐 Smart Contract Features</h2>
+                    <ul class="feature-list">
+                        <li><strong>One NFT Per Wallet:</strong> Registry system prevents multiple NFTs per address</li>
+                        <li><strong>Soulbound Tokens:</strong> NFTs are non-transferable (except for burning)</li>
+                        <li><strong>Random UUID:</strong> Each passport gets a unique 6-character alphanumeric ID</li>
+                        <li><strong>Burn & Re-mint:</strong> Users can burn their NFT and mint a new one if needed</li>
+                        <li><strong>Event Emission:</strong> Smart contract emits events for frontend integration</li>
+                        <li><strong>Upgrade Capability:</strong> Built-in upgrade mechanism for future improvements</li>
+                    </ul>
+                </div>
+
+                <!-- NFT Metadata Structure -->
+                <div class="section">
+                    <h2>🎨 NFT Metadata Structure</h2>
+                    <div class="card">
+                        <h4>Each Sui Face Passport NFT contains:</h4>
+                        <div class="code-block">
+{
+  "name": "Sui Face Passport #[UUID]",
+  "description": "A Proof-Of-Humanity Passport SoulboundNFT",
+  "image": "https://aggregator.walrus-testnet.walrus.space/v1/blobs/...",
+  "uuid": "ABC123",
+  "owner": "0x1234...5678",
+  "creator": "0xabcd...efgh",
+  "created_at": 1703123456789,
+  "project_url": "https://sui-face-dapp.vercel.app/"
+}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Considerations -->
+                <div class="section">
+                    <h2>🛡️ Security Considerations</h2>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>🔒 Smart Contract Security</h4>
+                            <p>Built with Move language providing formal verification and memory safety guarantees.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🎭 Privacy Protection</h4>
+                            <p>Face detection happens locally in the browser - no biometric data is stored on-chain.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🚫 Anti-Sybil Mechanisms</h4>
+                            <p>One NFT per wallet policy prevents multiple identity creation from same address.</p>
+                        </div>
+                        <div class="card">
+                            <h4>🔄 Upgrade Safety</h4>
+                            <p>Smart contract includes upgrade capability with proper access controls.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Development Roadmap -->
+                <div class="section">
+                    <h2>🗺️ Development Roadmap</h2>
+                    <div class="roadmap">
+                        <div class="roadmap-item">
+                            <div class="phase">Phase 1 ✅</div>
+                            <h4>MVP Development</h4>
+                            <p>Basic face detection, NFT minting, and wallet integration on Sui Testnet</p>
+                        </div>
+                        
+                        <div class="roadmap-item">
+                            <div class="phase">Phase 2 🚧</div>
+                            <h4>Enhanced Features</h4>
+                            <p>Improved UI/UX, advanced face verification algorithms, and comprehensive testing</p>
+                        </div>
+                        
+                        <div class="roadmap-item">
+                            <div class="phase">Phase 3 📋</div>
+                            <h4>Mainnet Deployment</h4>
+                            <p>Production deployment on Sui Mainnet with full security audits</p>
+                        </div>
+                        
+                        <div class="roadmap-item">
+                            <div class="phase">Phase 4 🔮</div>
+                            <h4>Ecosystem Integration</h4>
+                            <p>API for third-party integration, SDK development, and partnership programs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Use Cases -->
+                <div class="section">
+                    <h2>🎯 Use Cases</h2>
+                    <div class="grid">
+                        <div class="card">
+                            <h4>🗳️ Governance & Voting</h4>
+                            <p>Verify human voters in DAO governance to prevent Sybil attacks</p>
+                        </div>
+                        <div class="card">
+                            <h4>🎁 Airdrops & Distributions</h4>
+                            <p>Fair token distribution to verified humans only</p>
+                        </div>
+                        <div class="card">
+                            <h4>🏆 Reputation Systems</h4>
+                            <p>Build trust scores based on verified human identity</p>
+                        </div>
+                        <div class="card">
+                            <h4>🌐 Social Platforms</h4>
+                            <p>Prevent bot accounts and ensure human-only communities</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Getting Started -->
+                <div class="section">
+                    <h2>🚀 Getting Started</h2>
+                    <div class="card">
+                        <h4>Quick Start Guide</h4>
+                        <div class="code-block">
+# Clone the repository
+git clone https://github.com/skadi2910/sui-face.git
+cd sui-face
+
+# Install dependencies
+cd app
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Build smart contracts
+cd ../contracts
+./build.sh
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <h3>🔗 Links & Resources</h3>
+                <p>
+                    <a href="https://sui-face-dapp.vercel.app/" target="_blank">Live Demo</a> |
+                    <a href="https://sui.io/" target="_blank">Sui Network</a> |
+                    <a href="https://walrus.space/" target="_blank">Walrus Storage</a> |
+                    <a href="https://move-language.github.io/move/" target="_blank">Move Language</a>
+                </p>
+                <p style="margin-top: 20px; opacity: 0.8;">
+                    Made with ❤️ and 🧠 AI by <a href="https://github.com/skadi2910" target="_blank">skadi2910</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

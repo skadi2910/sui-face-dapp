@@ -1,0 +1,479 @@
+/* =============================================
+   2000s RETRO STYLING - Y2K NOSTALGIA
+   ============================================= */
+
+/* Global Animations */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes sparkle {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0); }
+  }
+  
+  @keyframes matrix-scroll {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(20px, 20px); }
+  }
+  
+  @keyframes neon-pulse {
+    0%, 100% { text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor; }
+    50% { text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+  }
+  
+  @keyframes retro-bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+    40%, 43% { transform: translate3d(0, -30px, 0); }
+    70% { transform: translate3d(0, -15px, 0); }
+    90% { transform: translate3d(0, -4px, 0); }
+  }
+  
+  @keyframes rainbow-glow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  
+  /* Main Background */
+  .retro-bg {
+    background: linear-gradient(45deg, #000428 0%, #004e92 50%, #000428 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Matrix Background Pattern */
+  .matrix-bg {
+    background-image: 
+      linear-gradient(90deg, transparent 98%, #00ff00 100%),
+      linear-gradient(0deg, transparent 98%, #00ff00 100%);
+    background-size: 20px 20px;
+    width: 100%;
+    height: 100%;
+    animation: matrix-scroll 10s linear infinite;
+  }
+  
+  .matrix-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  
+  /* Floating Elements */
+  .floating-elements {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  
+  .floating-shape {
+    position: absolute;
+    font-size: 1.5rem;
+    opacity: 0.6;
+    animation: neon-pulse 3s ease-in-out infinite;
+  }
+  
+  /* Typography */
+  .retro-title {
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  .retro-text {
+    font-family: 'Arial Black', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .retro-mono {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+  }
+  
+  /* Neon Text Colors */
+  .text-neon-green {
+    color: #00ff00;
+    text-shadow: 0 0 10px #00ff00, 2px 2px 0px #000;
+  }
+  
+  .text-neon-cyan {
+    color: #00ffff;
+    text-shadow: 0 0 15px #00ffff, 2px 2px 0px #000;
+  }
+  
+  .text-neon-pink {
+    color: #ff00ff;
+    text-shadow: 0 0 15px #ff00ff, 3px 3px 0px #000;
+  }
+  
+  .text-neon-yellow {
+    color: #ffff00;
+    text-shadow: 0 0 10px #ffff00, 1px 1px 0px #000;
+  }
+  
+  .text-neon-orange {
+    color: #ff6600;
+    text-shadow: 0 0 10px #ff6600, 2px 2px 0px #000;
+  }
+  
+  .text-3d-effect {
+    text-shadow: 0 0 20px currentColor, 4px 4px 0px #ff00ff, 8px 8px 0px #00ffff;
+    transform: skew(-5deg);
+  }
+  
+  .text-rainbow {
+    background: linear-gradient(45deg, #ff0080, #00ff80, #8000ff, #ff8000, #0080ff);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  /* Card Styles */
+  .retro-card {
+    background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+    border: 4px solid #00ff00;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .retro-card:hover {
+    animation: neon-pulse 1s ease-in-out infinite;
+    transform: translateY(-2px);
+  }
+  
+  .retro-card-inner {
+    background: rgba(0, 0, 0, 0.7);
+    margin: 4px;
+    border-radius: 4px;
+    border: 2px solid #00ffff;
+  }
+  
+  .retro-card-header {
+    background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+    border-bottom: 4px solid #00ffff;
+    border-radius: 4px 4px 0 0;
+  }
+  
+  /* Status Indicators */
+  .status-dot {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+  
+  .status-dot-verified {
+    background: #00ff00;
+    border-color: #00ff88;
+    box-shadow: 0 0 20px #00ff00;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+  
+  .status-dot-pending {
+    background: #ff0000;
+    border-color: #ff4444;
+    box-shadow: 0 0 20px #ff0000;
+  }
+  
+  .status-dot-success {
+    background: #00ffff;
+    border-color: #44ffff;
+    box-shadow: 0 0 20px #00ffff;
+    animation: spin 2s linear infinite;
+  }
+  
+  /* Button Styles */
+  .retro-btn {
+    font-family: 'Arial Black', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 4px solid;
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .retro-btn:hover {
+    animation: retro-bounce 1s ease;
+    transform: scale(1.05);
+  }
+  
+  .retro-btn-primary {
+    background: linear-gradient(135deg, #ff00ff 0%, #00ffff 100%);
+    border-color: #00ff00;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 0 0 25px rgba(255, 0, 255, 0.7);
+  }
+  
+  .retro-btn-success {
+    background: linear-gradient(135deg, #00ff00 0%, #00ffff 100%);
+    border-color: #ffff00;
+    color: #000;
+    text-shadow: 1px 1px 0px #fff;
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.8);
+  }
+  
+  .retro-btn-danger {
+    background: linear-gradient(135deg, #ff0000 0%, #ff6600 100%);
+    border-color: #ffff00;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+  }
+  
+  .retro-btn-secondary {
+    background: linear-gradient(135deg, #666 0%, #999 100%);
+    border-color: #ffff00;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 0 0 25px rgba(102, 102, 102, 0.7);
+  }
+  
+  .retro-btn-warning {
+    background: linear-gradient(135deg, #ffff00 0%, #ff6600 100%);
+    border-color: #ff00ff;
+    color: #000;
+    text-shadow: 1px 1px 0px #fff;
+    box-shadow: 0 0 25px rgba(255, 255, 0, 0.8);
+  }
+  
+  .retro-btn-disabled {
+    background: linear-gradient(135deg, #666 0%, #999 100%);
+    border-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+  }
+  
+  .retro-btn-xl {
+    padding: 1.5rem 3rem;
+    font-size: 1.5rem;
+  }
+  
+  /* Code/Input Styles */
+  .retro-code {
+    background: linear-gradient(135deg, #000 0%, #333 100%);
+    color: #00ff00;
+    border: 2px solid #00ff00;
+    border-radius: 4px;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    text-shadow: 0 0 5px #00ff00;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+  }
+  
+  /* Modal Styles */
+  .retro-modal {
+    background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+    border: 4px solid #00ff00;
+    border-radius: 8px;
+    box-shadow: 0 0 50px rgba(0, 255, 0, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.2);
+    animation: neon-pulse 3s ease-in-out infinite;
+  }
+  
+  .retro-modal-content {
+    background: rgba(0, 0, 0, 0.8);
+    margin: 8px;
+    border-radius: 4px;
+    position: relative;
+  }
+  
+  .retro-close-btn {
+    background: linear-gradient(135deg, #ff0000 0%, #ff6600 100%);
+    border: 4px solid #ffff00;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    transition: all 0.2s ease;
+  }
+  
+  .retro-close-btn:hover {
+    animation: spin 0.5s ease;
+  }
+  
+  /* Loading Spinner */
+  .retro-spinner {
+    border: 8px solid #00ff00;
+    border-top: 8px solid #ff00ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 30px #00ff00;
+  }
+  
+  /* Alert/Notification Styles */
+  .retro-alert {
+    border: 4px double;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .retro-alert-success {
+    background: linear-gradient(135deg, #00ff00 0%, #00ffff 100%);
+    border-color: #ffff00;
+    color: #000;
+    text-shadow: 1px 1px 0px #fff;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+    animation: retro-bounce 2s ease infinite;
+  }
+  
+  .retro-alert-error {
+    background: linear-gradient(135deg, #ff0000 0%, #ff6600 100%);
+    border-color: #ffff00;
+    color: white;
+    text-shadow: 2px 2px 0px #000;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+  
+  .retro-alert-info {
+    background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+    border-color: #00ffff;
+    color: #00ffff;
+    text-shadow: 0 0 15px #00ffff, 2px 2px 0px #000;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+  }
+  
+  /* Fireworks Styles */
+  .firework-burst {
+    position: absolute;
+    animation: ping 2s ease-out infinite;
+  }
+  
+  .firework-sparkle {
+    position: absolute;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    animation: sparkle 2s ease-out infinite;
+  }
+  
+  .firework-center {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+  }
+  
+  .celebration-text {
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-size: 4rem;
+    font-weight: 900;
+    animation: retro-bounce 2s ease infinite;
+    transform: skew(-5deg);
+  }
+  
+  /* Utility Classes */
+  .retro-border {
+    border: 4px solid #00ff00;
+  }
+  
+  .retro-border-double {
+    border: 4px double #00ff00;
+  }
+  
+  .retro-glow-green {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+  }
+  
+  .retro-glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+  }
+  
+  .retro-glow-pink {
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
+  }
+  
+  .retro-glow-red {
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+  }
+  
+  .retro-skew {
+    transform: skew(-5deg);
+  }
+  
+  .retro-gradient-bg {
+    background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .retro-btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+    }
+    
+    .retro-btn-xl {
+      padding: 1rem 2rem;
+      font-size: 1.25rem;
+    }
+    
+    .celebration-text {
+      font-size: 2.5rem;
+    }
+    
+    .retro-title {
+      font-size: 2rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .retro-card {
+      margin: 0.5rem;
+    }
+    
+    .retro-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .celebration-text {
+      font-size: 2rem;
+    }
+  }
+  
+  /* Animation overrides for specific elements */
+  .animate-retro-pulse {
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+  
+  .animate-retro-bounce {
+    animation: retro-bounce 1s ease;
+  }
+  
+  .animate-rainbow {
+    animation: rainbow-glow 3s linear infinite;
+  }
+  
+  /* Special effects */
+  .retro-text-glow {
+    animation: neon-pulse 3s ease-in-out infinite;
+  }
+  
+  .retro-hover-float:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+  }
