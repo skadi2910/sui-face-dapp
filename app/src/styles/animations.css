@@ -1,0 +1,153 @@
+/* Firework animations */
+@keyframes firework {
+    0% {
+      transform: scale(0) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1) rotate(180deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.5) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes sparkle {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      transform: scale(0.8) translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Animation classes */
+  .animate-firework {
+    animation: firework linear infinite;
+  }
+  
+  .animate-sparkle {
+    animation: sparkle linear infinite;
+  }
+  
+  .animate-modalSlideIn {
+    animation: modalSlideIn 0.5s ease-out;
+  }
+  
+  /* Additional celebratory animations */
+  @keyframes confettiDrop {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes starTwinkle {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  
+  @keyframes rainbowGlow {
+    0% {
+      box-shadow: 0 0 20px #ff0000;
+    }
+    16.67% {
+      box-shadow: 0 0 20px #ff8800;
+    }
+    33.33% {
+      box-shadow: 0 0 20px #ffff00;
+    }
+    50% {
+      box-shadow: 0 0 20px #00ff00;
+    }
+    66.67% {
+      box-shadow: 0 0 20px #0088ff;
+    }
+    83.33% {
+      box-shadow: 0 0 20px #8800ff;
+    }
+    100% {
+      box-shadow: 0 0 20px #ff0000;
+    }
+  }
+  
+  /* Utility animation classes */
+  .animate-confettiDrop {
+    animation: confettiDrop 3s linear infinite;
+  }
+  
+  .animate-starTwinkle {
+    animation: starTwinkle 2s ease-in-out infinite;
+  }
+  
+  .animate-rainbowGlow {
+    animation: rainbowGlow 3s linear infinite;
+  }
+  
+  /* Firework burst variations for different intensities */
+  @keyframes fireworkBig {
+    0% {
+      transform: scale(0) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.5) rotate(180deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.5) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes fireworkSmall {
+    0% {
+      transform: scale(0) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.8) rotate(180deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.2) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  .animate-firework-big {
+    animation: fireworkBig linear infinite;
+  }
+  
+  .animate-firework-small {
+    animation: fireworkSmall linear infinite;
+  }

@@ -1,9 +1,7 @@
 module sui_face_passport_nft::sui_face_passport_nft {
     // Add this import for upgrades
     use sui::package;
-    // use sui::object::{Self, UID};
-    // use sui::tx_context::{Self, TxContext};
-    // use sui::transfer;
+    use sui::display;
     use sui::random::{Self, Random, new_generator};
     use sui::url::{Self, Url};
     use sui::event;
@@ -11,19 +9,24 @@ module sui_face_passport_nft::sui_face_passport_nft {
     use sui::table::{Self,Table, new};
     use sui::clock::{Self, Clock};
 
+    // Error constants
+    const EAlreadyMinted: u64 = 1;
+    const EUnauthorizedBurn: u64 = 2;
 
     // Add this struct for upgrade capability
     public struct SUI_FACE_PASSPORT_NFT has drop {}
+    
     // -------------------------------
     // NFT STRUCT
     // -------------------------------
-    public struct FacePassportNFT has key {
+    public struct SuiFacePassportNFT has key {
         id: UID,
         name: string::String,
         description: string::String,
         url: Url,
         uuid: string::String, // Random alphanumeric ID
         owner: address,
+        creator: address,
         created_at: u64,
     }
 
@@ -33,6 +36,7 @@ module sui_face_passport_nft::sui_face_passport_nft {
     public struct MintRegistry has key {
         id: UID,
         minted: Table<address, bool>,
+        deployer: address,
     }
 
     // -------------------------------
@@ -50,16 +54,53 @@ module sui_face_passport_nft::sui_face_passport_nft {
     }
 
     // -------------------------------
-    // INIT: Called automatically on publish - creates upgrade capability
+    // INIT: Called automatically on publish - creates upgrade capability AND Display
     // -------------------------------
     fun init(otw: SUI_FACE_PASSPORT_NFT, ctx: &mut TxContext) {
         // Create upgrade capability and transfer to deployer
-        package::claim_and_keep(otw, ctx);
+        let publisher = package::claim(otw, ctx);
+        let deployer = tx_context::sender(ctx);
+        
+        // Create Display object for FacePassportNFT with standard NFT fields
+        let keys = vector[
+            b"name".to_string(),
+            b"description".to_string(), 
+            b"image_url".to_string(),  // Standard field name for NFT images
+            b"uuid".to_string(),
+            b"owner".to_string(),
+            b"creator".to_string(),
+            b"created_at".to_string(),
+            b"project_url".to_string(),
+        ];
+
+        let values = vector[
+            b"{name}".to_string(),
+            b"{description}".to_string(),
+            b"{url}".to_string(),  // Maps to the url field
+            b"{uuid}".to_string(),
+            b"{owner}".to_string(),
+            b"{creator}".to_string(),
+            b"{created_at}".to_string(),
+            b"https://sui-face-dapp.vercel.app/".to_string(), // Static project URL
+        ];
+
+        // Create and configure the Display
+        let mut display = display::new_with_fields<SuiFacePassportNFT>(
+            &publisher, keys, values, ctx
+        );
+        
+        // Commit the Display version
+        display.update_version();
+
+        // Transfer objects
+        transfer::public_transfer(publisher, deployer);
+        transfer::public_transfer(display, deployer);
         
         // Auto-create the registry on first deploy
         let registry = MintRegistry {
             id: object::new(ctx),
             minted: new(ctx),   
+            deployer,
         };
         transfer::share_object(registry);
     }
@@ -76,9 +117,7 @@ module sui_face_passport_nft::sui_face_passport_nft {
         let sender = tx_context::sender(ctx);
 
         // Reject if already minted
-        if (table::contains(&registry.minted, sender)) {
-            abort 0x1337 // already minted
-        };
+        assert!(!table::contains(&registry.minted, sender), EAlreadyMinted);
 
         // Mark as minted
         table::add(&mut registry.minted, sender, true);
@@ -94,19 +133,22 @@ module sui_face_passport_nft::sui_face_passport_nft {
             vector::push_back(&mut uuid_chars, ch);
             i = i + 1;
         };
+        
         // Hardcoded values for all Face Passport NFTs
-        let walrus_url = b"https://aggregator.walrus-testnet.walrus.space/v1/jQMx0dtpw9wbTz_kM7ayA4Tqz3XHstPfYDKkLnY441g";
-        let nft_name = b"Sui Face Passport";
+        let walrus_url = b"https://aggregator.walrus-testnet.walrus.space/v1/blobs/jQMx0dtpw9wbTz_kM7ayA4Tqz3XHstPfYDKkLnY441g";
         let nft_description = b"A Proof-Of-Humanity Passport SoulboundNFT";
         let uuid = string::utf8(uuid_chars);
-
-        let nft = FacePassportNFT {
+        let mut nft_name = string::utf8(b"Sui Face Passport #");
+        string::append(&mut nft_name, uuid);
+        
+        let nft = SuiFacePassportNFT {
             id: object::new(ctx),
-            name: string::utf8(nft_name),
+            name: nft_name,
             description: string::utf8(nft_description),
             url: url::new_unsafe_from_bytes(walrus_url),
             uuid,
             owner: sender,
+            creator: registry.deployer,
             created_at: clock::timestamp_ms(clock),
         };
 
@@ -120,64 +162,66 @@ module sui_face_passport_nft::sui_face_passport_nft {
     }
 
     // -------------------------------
-    // View helpers
-    // -------------------------------
-    public fun name(nft: &FacePassportNFT): &string::String {
-        &nft.name
-    }
-
-    public fun description(nft: &FacePassportNFT): &string::String {
-        &nft.description
-    }
-
-    public fun url(nft: &FacePassportNFT): &Url {
-        &nft.url
-    }
-
-    public fun uuid(nft: &FacePassportNFT): &string::String {
-        &nft.uuid
-    }
-
-    public fun owner(nft: &FacePassportNFT): &address {
-        &nft.owner
-    }
-
-    public fun created_at(nft: &FacePassportNFT): &u64 {
-        &nft.created_at
-    }
-    // -------------------------------
-    // Optional: burn function
-    // -------------------------------
-    // public entry fun burn(nft: FacePassportNFT, _: &mut TxContext) {
-    //     let FacePassportNFT { id, name: _, description: _, url: _, uuid: _, owner: _, created_at: _ } = nft;
-    //     id.delete()
-    // }
-    
     // Updated burn function that allows re-minting
+    // -------------------------------
     public entry fun burn(
-        nft: FacePassportNFT, 
+        nft: SuiFacePassportNFT, 
         registry: &mut MintRegistry,
         ctx: &mut TxContext
     ) {
-    let sender = tx_context::sender(ctx);
+        let sender = tx_context::sender(ctx);
+        
+        // Verify sender owns this NFT
+        assert!(nft.owner == sender, EUnauthorizedBurn);
+        
+        // Extract UUID before destroying NFT
+        let uuid = nft.uuid;
+        
+        // Remove from registry to allow re-minting
+        table::remove(&mut registry.minted, sender);
+        
+        // Destroy the NFT
+        let SuiFacePassportNFT { id, name: _, description: _, url: _, uuid: _, owner: _, creator: _, created_at: _ } = nft;
+        object::delete(id);
+        
+        // Emit burn event
+        event::emit(NFTBurned {
+            creator: sender,
+            uuid,
+        });
+    }
+
+    // -------------------------------
+    // View helpers
+    // -------------------------------
+    public fun name(nft: &SuiFacePassportNFT): &string::String {
+        &nft.name
+    }
+
+    public fun description(nft: &SuiFacePassportNFT): &string::String {
+        &nft.description
+    }
+
+    public fun url(nft: &SuiFacePassportNFT): &Url {
+        &nft.url
+    }
+
+    public fun uuid(nft: &SuiFacePassportNFT): &string::String {
+        &nft.uuid
+    }
+
+    public fun owner(nft: &SuiFacePassportNFT): &address {
+        &nft.owner
+    }
     
-    // Verify sender owns this NFT
-    assert!(nft.owner == sender, 0x1338); // unauthorized burn
-    // Extract UUID before destroying NFT
-    let uuid = nft.uuid;
-    // Remove from registry to allow re-minting
-    table::remove(&mut registry.minted, sender);
+    public fun creator(nft: &SuiFacePassportNFT): &address {
+        &nft.creator
+    }
     
-    // Destroy the NFT
-    let FacePassportNFT { id, name: _, description: _, url: _, uuid: _, owner: _, created_at: _ } = nft;
-    id.delete();
-    
-    // Optional: Emit burn event
-    event::emit(NFTBurned {
-        creator: sender,
-        uuid,
-    });
-}
+    public fun created_at(nft: &SuiFacePassportNFT): &u64 {
+        &nft.created_at
+    }
+
     // -------------------------------
     // ⚠️ DO NOT expose transfer() — keeps NFT soulbound
     // -------------------------------

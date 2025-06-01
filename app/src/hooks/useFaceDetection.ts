@@ -7,31 +7,77 @@ export const useFaceDetection = () => {
   const [captureVideo, setCaptureVideo] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [blinkDetected, setBlinkDetected] = useState(false);
-  const [headMovementDetected, setHeadMovementDetected] = useState(false);
+  const [happyExpressionDetected, setHappyExpressionDetected] = useState(false);
+  const [angryExpressionDetected, setAngryExpressionDetected] = useState(false);
   const [livenessResult, setLivenessResult] = useState<
     "pending" | "pass" | "fail"
   >("pending");
 
   // Current step tracking
   const [currentStep, setCurrentStep] = useState<
-    "face" | "movement" | "blink" | "complete"
+    "face" | "happy" | "angry" | "blink" | "complete"
   >("face");
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previousPosition = useRef<{ x: number; y: number } | null>(null);
   const eyeClosedFrames = useRef(0);
   const intervalRef = useRef<number | null>(null);
-  const movementFrameCounter = useRef(0);
-  const recentPositions = useRef<{ x: number; y: number }[]>([]);
+
+  // Use refs for immediate state tracking to avoid async state issues
+  const currentStepRef = useRef<"face" | "happy" | "angry" | "blink" | "complete">("face");
+  const faceDetectedRef = useRef(false);
+  const happyDetectedRef = useRef(false);
+  const angryDetectedRef = useRef(false);
+
+  // Face loss tracking to prevent random jumps back
+  const faceLostFrameCount = useRef(0);
+  const FACE_LOST_THRESHOLD = 10; // Allow 10 frames (1 second) of face loss before resetting
+
+  // Timing refs for step delays
+  const faceDetectionStartTime = useRef<number | null>(null);
+  const happyDetectionStartTime = useRef<number | null>(null);
+  const angryDetectionStartTime = useRef<number | null>(null);
+  const blinkDetectionStartTime = useRef<number | null>(null);
+  
+  // Expression tracking
+  const happyDetectedDuringStep = useRef(false);
+  const angryDetectedDuringStep = useRef(false);
 
   // Constants - Match the actual display size (w-72 h-80 = 288x320px)
   const videoHeight = 320;
   const videoWidth = 288;
-  const movementThreshold = 10;
   const blinkThreshold = 1;
   const earThreshold = 0.28;
+  const expressionThreshold = 0.25; // 25% threshold
+
+  // Timing constants (in milliseconds) - Updated to make expressions faster
+  const FACE_DETECTION_DURATION = 2000; // 2 seconds
+  const HAPPY_DETECTION_DURATION = 2000; // 2 seconds (reduced from 3.5)
+  const ANGRY_DETECTION_DURATION = 2000; // 2 seconds (reduced from 3.5)
+  const BLINK_DETECTION_DURATION = 2500; // 2.5 seconds
+
+  // Helper function to update both state and ref
+  const updateCurrentStep = (newStep: "face" | "happy" | "angry" | "blink" | "complete") => {
+    console.log("🔄 Updating step from", currentStepRef.current, "to", newStep);
+    currentStepRef.current = newStep;
+    setCurrentStep(newStep);
+  };
+
+  const updateFaceDetected = (detected: boolean) => {
+    faceDetectedRef.current = detected;
+    setFaceDetected(detected);
+  };
+
+  const updateHappyDetected = (detected: boolean) => {
+    happyDetectedRef.current = detected;
+    setHappyExpressionDetected(detected);
+  };
+
+  const updateAngryDetected = (detected: boolean) => {
+    angryDetectedRef.current = detected;
+    setAngryExpressionDetected(detected);
+  };
 
   // Load models
   useEffect(() => {
@@ -62,19 +108,73 @@ export const useFaceDetection = () => {
     return (vertical1 + vertical2) / (2 * horizontal);
   };
 
+  // Helper function to check if happy expressions are detected
+  const isHappyExpression = (expressions: any) => {
+    try {
+      const happyScore = expressions.happy || 0;
+      const surprisedScore = expressions.surprised || 0;
+      
+      // More lenient detection - any smile-related expression
+      const isHappy = happyScore > expressionThreshold || surprisedScore > expressionThreshold;
+      
+      // console.log("😊 Happy check - Happy:", (happyScore * 100).toFixed(1) + "%", 
+      //             "Surprised:", (surprisedScore * 100).toFixed(1) + "%", 
+      //             "Result:", isHappy);
+      
+      return isHappy;
+    } catch (error) {
+      console.error("Error in isHappyExpression:", error);
+      return false;
+    }
+  };
+
+  // Helper function to check if angry expressions are detected
+  const isAngryExpression = (expressions: any) => {
+    try {
+      const angryScore = expressions.angry || 0;
+      const disgustedScore = expressions.disgusted || 0;
+      const sadScore = expressions.sad || 0;
+      const fearfulScore = expressions.fearful || 0;
+      
+      // Consider any negative emotion
+      const isAngry = angryScore > expressionThreshold || 
+                     disgustedScore > expressionThreshold || 
+                     sadScore > expressionThreshold ||
+                     fearfulScore > expressionThreshold;
+      
+      // console.log("😠 Angry check - Angry:", (angryScore * 100).toFixed(1) + "%", 
+      //             "Disgusted:", (disgustedScore * 100).toFixed(1) + "%", 
+      //             "Sad:", (sadScore * 100).toFixed(1) + "%",
+      //             "Fearful:", (fearfulScore * 100).toFixed(1) + "%",
+      //             "Result:", isAngry);
+      
+      return isAngry;
+    } catch (error) {
+      console.error("Error in isAngryExpression:", error);
+      return false;
+    }
+  };
+
   const startVideo = () => {
     // Reset all detection states for fresh start
-    setFaceDetected(false);
+    updateFaceDetected(false);
     setBlinkDetected(false);
-    setHeadMovementDetected(false);
+    updateHappyDetected(false);
+    updateAngryDetected(false);
     setLivenessResult("pending");
-    setCurrentStep("face");
+    updateCurrentStep("face");
 
     // Reset refs
-    previousPosition.current = null;
     eyeClosedFrames.current = 0;
-    movementFrameCounter.current = 0;
-    recentPositions.current = [];
+    happyDetectedDuringStep.current = false;
+    angryDetectedDuringStep.current = false;
+    faceLostFrameCount.current = 0;
+
+    // Reset timing refs
+    faceDetectionStartTime.current = null;
+    happyDetectionStartTime.current = null;
+    angryDetectionStartTime.current = null;
+    blinkDetectionStartTime.current = null;
 
     setCaptureVideo(true);
     navigator.mediaDevices
@@ -99,8 +199,8 @@ export const useFaceDetection = () => {
 
     intervalRef.current = setInterval(async () => {
       // Stop processing if verification is complete
-      if (livenessResult === "pass" && currentStep === "complete") {
-        console.log("🎯 Verification complete - stopping detection processing");
+      if (livenessResult === "pass" && currentStepRef.current === "complete") {
+        // console.log("🎯 Verification complete - stopping detection processing");
         return;
       }
       
@@ -134,120 +234,143 @@ export const useFaceDetection = () => {
           .withFaceLandmarks()
           .withFaceExpressions();
 
+        const currentTime = Date.now();
+
         if (detections.length > 0) {
+          // Face is detected - reset face lost counter
+          faceLostFrameCount.current = 0;
+          
           const landmarks = detections[0].landmarks;
-          const faceCenter = {
-            x: (landmarks.positions[27].x + landmarks.positions[30].x) / 2,
-            y: (landmarks.positions[27].y + landmarks.positions[30].y) / 2,
-          };
+          const expressions = detections[0].expressions;
 
-          // Use local variables to track current state within this cycle
-          let localStep = currentStep;
-          let localFaceDetected = faceDetected;
-          let localHeadMovement = headMovementDetected;
-          let localBlink = blinkDetected;
-
-          // Step 1: Face Detection
-          if (localStep === "face" && !localFaceDetected) {
-            console.log("✅ Step 1: Face detected");
-            setFaceDetected(true);
-            localFaceDetected = true;
-            setCurrentStep("movement");
-            localStep = "movement";
-            console.log("Moving to movement step");
-          }
-
-          // Step 2: Head Movement Detection
-          if (
-            localStep === "movement" &&
-            localFaceDetected &&
-            !localHeadMovement
-          ) {
-            // Store current position in recent positions array
-            recentPositions.current.push(faceCenter);
-
-            // Keep only last 10 positions (1 second of history)
-            if (recentPositions.current.length > 10) {
-              recentPositions.current.shift();
+          // Step 1: Face Detection with timing
+          if (currentStepRef.current === "face" && !faceDetectedRef.current) {
+            // Start timing when face is first detected
+            if (!faceDetectionStartTime.current) {
+              faceDetectionStartTime.current = currentTime;
+              // console.log("👤 Face detected - starting timer");
             }
 
-            movementFrameCounter.current++;
-            console.log(
-              "Movement check - Frame:",
-              movementFrameCounter.current,
-            );
-
-            if (
-              movementFrameCounter.current > 5 &&
-              recentPositions.current.length >= 5
-            ) {
-              // Compare current position with position from 5 frames ago
-              const oldPosition = recentPositions.current[0];
-              const currentPosition = faceCenter;
-
-              console.log("=== MOVEMENT CALCULATION DEBUG ===");
-              console.log("Current position:", currentPosition);
-              console.log("Position from 5 frames ago:", oldPosition);
-
-              const distance = Math.sqrt(
-                Math.pow(currentPosition.x - oldPosition.x, 2) +
-                  Math.pow(currentPosition.y - oldPosition.y, 2),
-              );
-
-              console.log("Distance over time:", distance);
-              console.log("Threshold:", movementThreshold);
-              console.log("=== END DEBUG ===");
-
-              if (distance > movementThreshold) {
-                console.log("✅ Step 2: Head movement detected");
-                setHeadMovementDetected(true);
-                localHeadMovement = true;
-                setCurrentStep("blink");
-                localStep = "blink";
-                console.log("Moving to blink step");
-              } else {
-                console.log("Not enough movement detected over time");
-              }
+            // Check if enough time has passed
+            const faceDetectionDuration = currentTime - faceDetectionStartTime.current;
+            if (faceDetectionDuration >= FACE_DETECTION_DURATION) {
+              console.log("✅ Step 1: Face detection complete after", faceDetectionDuration, "ms");
+              updateFaceDetected(true);
+              updateCurrentStep("happy");
+              // console.log("🎯 Successfully moved to happy expression step");
             } else {
-              console.log(
-                "Collecting position data, frame:",
-                movementFrameCounter.current,
-              );
+              // console.log("Face detected, waiting for timer:", faceDetectionDuration, "/", FACE_DETECTION_DURATION, "ms");
             }
           }
 
-          // Step 3: Blink Detection
-          if (
-            localStep === "blink" &&
-            localFaceDetected &&
-            localHeadMovement &&
-            !localBlink
-          ) {
+          // Step 2: Happy Expression Detection with timing (now 2 seconds)
+          else if (currentStepRef.current === "happy" && faceDetectedRef.current && !happyDetectedRef.current) {
+            // Start the happy expression timer when entering this step
+            if (!happyDetectionStartTime.current) {
+              happyDetectionStartTime.current = currentTime;
+              happyDetectedDuringStep.current = false;
+              // console.log("😊 Starting happy expression step timer (2 seconds)");
+            }
+
+            // Check for happy expression using improved detection
+            if (expressions && isHappyExpression(expressions)) {
+              happyDetectedDuringStep.current = true;
+              // console.log("😊 Happy expression detected and marked!");
+            }
+
+            // Check if enough time has passed
+            const happyDuration = currentTime - happyDetectionStartTime.current;
+            console.log("😊 Happy timer:", happyDuration, "/", HAPPY_DETECTION_DURATION, "ms", 
+                      "| Detected:", happyDetectedDuringStep.current);
+
+            if (happyDuration >= HAPPY_DETECTION_DURATION) {
+              if (happyDetectedDuringStep.current) {
+                console.log("✅ Step 2: Happy expression complete after", happyDuration, "ms");
+                updateHappyDetected(true);
+                updateCurrentStep("angry");
+                console.log("🎯 Successfully moved to angry expression step");
+              } else {
+                console.log("⚠️ Time elapsed but no happy expression detected - restarting happy step");
+                // Reset happy expression step
+                happyDetectionStartTime.current = null;
+                happyDetectedDuringStep.current = false;
+              }
+            }
+          }
+
+          // Step 3: Angry Expression Detection with timing (now 2 seconds)
+          else if (currentStepRef.current === "angry" && faceDetectedRef.current && happyDetectedRef.current && !angryDetectedRef.current) {
+            // Start the angry expression timer when entering this step
+            if (!angryDetectionStartTime.current) {
+              angryDetectionStartTime.current = currentTime;
+              angryDetectedDuringStep.current = false;
+              console.log("😠 Starting angry expression step timer (2 seconds)");
+            }
+
+            // Check for angry expression using improved detection
+            if (expressions && isAngryExpression(expressions)) {
+              angryDetectedDuringStep.current = true;
+              console.log("😠 Angry expression detected and marked!");
+            }
+
+            // Check if enough time has passed
+            const angryDuration = currentTime - angryDetectionStartTime.current;
+            console.log("😠 Angry timer:", angryDuration, "/", ANGRY_DETECTION_DURATION, "ms", 
+                      "| Detected:", angryDetectedDuringStep.current);
+
+            if (angryDuration >= ANGRY_DETECTION_DURATION) {
+              if (angryDetectedDuringStep.current) {
+                console.log("✅ Step 3: Angry expression complete after", angryDuration, "ms");
+                updateAngryDetected(true);
+                updateCurrentStep("blink");
+                console.log("🎯 Successfully moved to blink step");
+              } else {
+                console.log("⚠️ Time elapsed but no angry expression detected - restarting angry step");
+                // Reset angry expression step
+                angryDetectionStartTime.current = null;
+                angryDetectedDuringStep.current = false;
+              }
+            }
+          }
+
+          // Step 4: Blink Detection with timing
+          else if (currentStepRef.current === "blink" && faceDetectedRef.current && happyDetectedRef.current && angryDetectedRef.current && !blinkDetected) {
+            // Start the blink timer when entering this step
+            if (!blinkDetectionStartTime.current) {
+              blinkDetectionStartTime.current = currentTime;
+              console.log("👀 Starting blink step timer");
+            }
+
             const leftEye = landmarks.getLeftEye();
             const rightEye = landmarks.getRightEye();
             const leftEAR = calculateEAR(leftEye);
             const rightEAR = calculateEAR(rightEye);
             const avgEAR = (leftEAR + rightEAR) / 2;
 
-            console.log("EAR:", avgEAR.toFixed(3), "Threshold:", earThreshold);
-
             if (avgEAR < earThreshold) {
               eyeClosedFrames.current++;
             } else {
               if (eyeClosedFrames.current >= blinkThreshold) {
-                console.log("✅ Step 3: Blink detected");
-                setBlinkDetected(true);
-                setCurrentStep("complete");
-                setLivenessResult("pass");
-                console.log("🎉 ALL STEPS COMPLETED - LIVENESS CHECK PASSED");
-                console.log("🛑 Stopping all detection processing...");
+                console.log("👀 Blink detected!");
+                
+                // Check if enough time has passed
+                const blinkDuration = currentTime - blinkDetectionStartTime.current;
+                if (blinkDuration >= BLINK_DETECTION_DURATION) {
+                  console.log("✅ Step 4: Blink detection complete after", blinkDuration, "ms");
+                  setBlinkDetected(true);
+                  updateCurrentStep("complete");
+                  setLivenessResult("pass");
+                  console.log("🎉 ALL STEPS COMPLETED - LIVENESS CHECK PASSED");
 
-                // Stop the interval completely after verification is complete
-                if (intervalRef.current) {
-                  clearInterval(intervalRef.current);
-                  intervalRef.current = null;
+                  // Stop the interval completely after verification is complete
+                  if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                  }
+                  return; // Exit immediately
+                } else {
+                  console.log("Blink detected, waiting for timer:", blinkDuration, "/", BLINK_DETECTION_DURATION, "ms");
                 }
-                return; // Exit immediately
               }
               eyeClosedFrames.current = 0;
             }
@@ -276,22 +399,35 @@ export const useFaceDetection = () => {
             ctx.restore();
           }
         } else {
-          // Face lost - clear canvas and reset everything
+          // Face lost - but don't reset immediately to prevent random jumps
+          faceLostFrameCount.current++;
+          
           if (ctx) {
             ctx.clearRect(0, 0, videoWidth, videoHeight);
           }
           
-          if (currentStep !== "face") {
-            console.log("❌ Face lost - restarting from step 1");
-            setFaceDetected(false);
+          // Only reset if face has been lost for more than the threshold AND we're not in the first step
+          if (faceLostFrameCount.current >= FACE_LOST_THRESHOLD && currentStepRef.current !== "face") {
+            // console.log("❌ Face lost for", faceLostFrameCount.current, "frames - restarting from step 1");
+            updateFaceDetected(false);
             setBlinkDetected(false);
-            setHeadMovementDetected(false);
+            updateHappyDetected(false);
+            updateAngryDetected(false);
             setLivenessResult("pending");
-            setCurrentStep("face");
-            previousPosition.current = null;
+            updateCurrentStep("face");
             eyeClosedFrames.current = 0;
-            movementFrameCounter.current = 0;
-            recentPositions.current = [];
+            happyDetectedDuringStep.current = false;
+            angryDetectedDuringStep.current = false;
+            faceLostFrameCount.current = 0;
+            
+            // Reset all timers
+            faceDetectionStartTime.current = null;
+            happyDetectionStartTime.current = null;
+            angryDetectionStartTime.current = null;
+            blinkDetectionStartTime.current = null;
+          } else if (faceLostFrameCount.current < FACE_LOST_THRESHOLD) {
+            // Face temporarily lost but within threshold - just log it
+            // console.log("⚠️ Face temporarily lost (", faceLostFrameCount.current, "/", FACE_LOST_THRESHOLD, ") - continuing...");
           }
         }
       }
@@ -312,17 +448,24 @@ export const useFaceDetection = () => {
     }
 
     // Reset all states
-    setFaceDetected(false);
+    updateFaceDetected(false);
     setBlinkDetected(false);
-    setHeadMovementDetected(false);
+    updateHappyDetected(false);
+    updateAngryDetected(false);
     setLivenessResult("pending");
-    setCurrentStep("face");
+    updateCurrentStep("face");
 
     // Reset refs
-    previousPosition.current = null;
     eyeClosedFrames.current = 0;
-    movementFrameCounter.current = 0;
-    recentPositions.current = [];
+    happyDetectedDuringStep.current = false;
+    angryDetectedDuringStep.current = false;
+    faceLostFrameCount.current = 0;
+
+    // Reset timing refs
+    faceDetectionStartTime.current = null;
+    happyDetectionStartTime.current = null;
+    angryDetectionStartTime.current = null;
+    blinkDetectionStartTime.current = null;
 
     setCaptureVideo(false);
   };
@@ -331,13 +474,15 @@ export const useFaceDetection = () => {
   const getCurrentStepInstruction = () => {
     switch (currentStep) {
       case "face":
-        return "Please position your face in the camera";
-      case "movement":
-        return "Please move your head slowly";
+        return "📸 Strike a pose! Get your beautiful face in the camera frame";
+      case "happy":
+        return "😊 Time to channel your inner joy! Give us your biggest, cheesiest smile!";
+      case "angry":
+        return "😠 Channel your inner villain! Show us your angriest face (don't worry, we won't judge)";
       case "blink":
-        return "Please blink your eyes";
+        return "👀 Perfect! Now give us a nice, slow blink like you're winking at your crush";
       case "complete":
-        return "Verification complete!";
+        return "🎉 You're a verification superstar! Mission accomplished!";
       default:
         return "";
     }
@@ -349,7 +494,8 @@ export const useFaceDetection = () => {
     captureVideo,
     modelsLoaded,
     blinkDetected,
-    headMovementDetected,
+    happyExpressionDetected,
+    angryExpressionDetected,
     livenessResult,
     currentStep,
 
