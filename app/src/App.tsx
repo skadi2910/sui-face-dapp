@@ -625,6 +625,7 @@ function App() {
                       nftCreator={currentNFTData.display.data.creator}
                       projectUrl={currentNFTData.display.data.project_url}
                       nftId={currentNFTData.objectId}
+                      createdAt={currentNFTData.display.data.created_at}
                     />
                   ) : (
                     <div className="p-16 text-center">
